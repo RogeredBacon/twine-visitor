@@ -13,7 +13,7 @@ router.post('/', (req, res, next) => {
 
   const validationError = noInput || notEmail + notEnglishName;
 
-  if (validationError) return res.send(validationError);
+  if (validationError) return res.status(415).send(validationError);
 
   checkUserExists(formSender.toLowerCase(), formEmail)
     .then(exists => {
