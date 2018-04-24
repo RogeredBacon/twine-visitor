@@ -12,6 +12,9 @@ import DetailsTable from '../components/DetailsTable';
 import Dropzone from '../components/Dropzone';
 import Logo from '../components/Logo';
 import { CbAdmin, Cloudinary } from '../../api';
+import {
+  ORG_NAME_INVALID,
+} from '../constants/error_text';
 
 
 const sectors = [
@@ -183,7 +186,7 @@ export default class SettingsPage extends React.Component {
                 label="Business name"
                 name="orgName"
                 type="text"
-                error={errors.orgName}
+                error={errors.orgName && ORG_NAME_INVALID}
               />
               <LabelledSelect
                 id="cb-admin-business-sector"
