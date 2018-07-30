@@ -8,7 +8,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import 'jest-dom/extend-expect';
 
-import renderWithRouter from '../../../tests';
+import renderWithRouter from '../../../tests/helpers';
 import ConfirmPassword from '../ConfirmPassword';
 
 describe('ConfirmPassword Component', () => {
