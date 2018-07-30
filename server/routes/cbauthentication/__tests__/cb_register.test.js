@@ -14,7 +14,7 @@ test('POST /api/cb/register | viable & registered CB', async (t) => {
 
   const successPayload = {
     orgName: 'Slack Jawed and Dopamine',
-    email: 'jinglis12@googlemail.com',
+    email: 'jvalentine@umbrella.corp',
     category: 'Housing',
     password: 'Chickens5*',
     passwordConfirm: 'Chickens5*',
@@ -126,7 +126,7 @@ test('POST /api/cb/register | invalid name', async (t) => {
 
   const failurePayload = {
     orgName: '1337 H4xx0R**^&&^$$(*',
-    email: 'jinglis12@googlemail.com',
+    email: 'jvalentine@umbrella.corp',
     category: 'Housing',
     password: 'Chickens5*',
     passwordConfirm: 'Chickens5*',
@@ -187,7 +187,7 @@ test('POST /api/cb/register | weak password', async (t) => {
 
   const failurePayload = {
     orgName: 'Slack Jawed and Dopamine',
-    email: 'jinglis12@googlemail.com',
+    email: 'jvalentine@umbrella.corp',
     category: 'Housing',
     password: 'password',
     passwordConfirm: 'password',
@@ -217,7 +217,7 @@ test('POST /api/cb/register | password dont match', async (t) => {
 
   const failurePayload = {
     orgName: 'Slack Jawed and Dopamine',
-    email: 'jinglis12@googlemail.com',
+    email: 'jvalentine@umbrella.corp',
     category: 'Housing',
     password: 'Chickens5*',
     passwordConfirm: 'Turkeys5*',
