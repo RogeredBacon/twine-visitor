@@ -10,6 +10,7 @@ import LabelledSelect from '../../shared/components/form/LabelledSelect';
 import Checkbox from '../components/Checkbox';
 import { Activities, ErrorUtils } from '../../api';
 import ActivityLabel from '../components/ActivityLabel';
+import { toCancellable } from '../../util';
 
 
 const Nav = styled.nav`
@@ -101,7 +102,24 @@ export default class ActivitiesPage extends React.Component {
     };
   }
 
+
   componentDidMount() {
+    this.componentRequests.push(this.getActivities());
+  }
+
+  componentWillUnmount() {
+    console.log(this.componentRequests);
+
+    this.componentRequests.forEach(x => x.cancel());
+    console.log(this.componentRequests);
+  }
+
+  componentRequests = [] //eslint-disable-line
+
+  onChange = e =>
+    this.setState(assocPath(['form', e.target.name], e.target.value))
+
+  getActivities = () => toCancellable(
     Activities.get(this.props.auth)
       .then((res) => {
         const activities = res.data.result;
@@ -123,79 +141,86 @@ export default class ActivitiesPage extends React.Component {
         } else {
           this.setState({ errors: { general: 'Could not get activity data', view: true } });
         }
-      });
-  }
-
-  onChange = e =>
-    this.setState(assocPath(['form', e.target.name], e.target.value))
+      }),
+  )
 
   toggleCheckbox = (id, day) => {
     const current = this.state.activities.items[id][day];
 
-    Activities.update(this.props.auth, { id, [day]: !current })
-      .then((res) => {
-        this.props.updateAdminToken(res.headers.authorization);
-        this.setState(assocPath(['activities', 'items', id], res.data.result));
-        this.setState(assocPath(['errors', 'view'], false));
-      })
-      .catch((error) => {
-        if (ErrorUtils.errorStatusEquals(error, 401)) {
-          this.props.history.push('/admin/login');
-        } else {
-          this.setState({ errors: { general: 'Could not update activity', view: true } });
-        }
-      });
+    this.componentRequests.push(
+      toCancellable(Activities.update(this.props.auth, { id, [day]: !current })
+        .then((res) => {
+          this.props.updateAdminToken(res.headers.authorization);
+          this.setState(assocPath(['activities', 'items', id], res.data.result));
+          this.setState(assocPath(['errors', 'view'], false));
+        })
+        .catch((error) => {
+          if (ErrorUtils.errorStatusEquals(error, 401)) {
+            this.props.history.push('/admin/login');
+          } else {
+            this.setState({ errors: { general: 'Could not update activity', view: true } });
+          }
+        })),
+    );
   }
 
   addActivity = (e) => {
     e.preventDefault();
 
-    Activities.create(this.props.auth, this.state.form)
-      .then((res) => {
-        this.setState((state) => {
-          const item = res.data.result;
-          const order = state.activities.order.concat(item.id);
-          return {
-            ...state,
-            activities: {
-              items: { ...state.activities.items, [item.id]: item },
-              order,
-            },
-          };
-        });
-        this.setState(assocPath(['errors', 'view'], false));
-      },
+    this.componentRequests.push(
+      toCancellable(Activities.create(this.props.auth, this.state.form)
+        .then((res) => {
+          // console.log(res);
 
-      )
-      .catch((error) => {
-        if (ErrorUtils.errorStatusEquals(error, 401)) {
-          this.props.history.push('/admin/login');
-        } else if (ErrorUtils.errorStatusEquals(error, 409)) {
-          this.setState({ errors: { general: 'Activity already exists', view: true } });
-        } else {
-          this.setState({ errors: { general: 'Could not create activity', view: true } });
-        }
-      });
+          this.setState((state) => {
+            const item = res.data.result;
+            const order = state.activities.order.concat(item.id);
+            return {
+              ...state,
+              activities: {
+                items: { ...state.activities.items, [item.id]: item },
+                order,
+              },
+            };
+          });
+          this.setState(assocPath(['errors', 'view'], false));
+        })
+        .catch((error) => {
+          // this error always throws
+          console.log(error);
+
+          if (ErrorUtils.errorStatusEquals(error, 401)) {
+            this.props.history.push('/admin/login');
+          } else if (ErrorUtils.errorStatusEquals(error, 409)) {
+            this.setState({ errors: { general: 'Activity already exists', view: true } });
+          } else {
+            this.setState({ errors: { general: 'Could not create activity', view: true } });
+          }
+        }),
+      ),
+    );
   }
 
   deleteActivity = (id) => {
-    Activities.delete(this.props.auth, { id })
-      .then((res) => {
-        this.props.updateAdminToken(res.headers.authorization);
-        this.setState(assocPath(['errors', 'view'], false));
-        this.setState((state) => {
-          const order = state.activities.order.filter(i => i !== id);
-          const items = dissoc(id, state.activities.items);
-          return { ...state, activities: { order, items } };
-        });
-      })
-      .catch((error) => {
-        if (ErrorUtils.errorStatusEquals(error, 401)) {
-          this.props.history.push('/admin/login');
-        } else {
-          this.setState({ errors: { general: 'Could not delete activity' }, view: true });
-        }
-      });
+    this.componentRequests.push(
+      toCancellable(Activities.delete(this.props.auth, { id })
+        .then((res) => {
+          this.props.updateAdminToken(res.headers.authorization);
+          this.setState(assocPath(['errors', 'view'], false));
+          this.setState((state) => {
+            const order = state.activities.order.filter(i => i !== id);
+            const items = dissoc(id, state.activities.items);
+            return { ...state, activities: { order, items } };
+          });
+        })
+        .catch((error) => {
+          if (ErrorUtils.errorStatusEquals(error, 401)) {
+            this.props.history.push('/admin/login');
+          } else {
+            this.setState({ errors: { general: 'Could not delete activity' }, view: true });
+          }
+        })),
+    );
   }
 
   render() {
